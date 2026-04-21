@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Lets Cook</string>
+
+    <string name="text_no_recent_search">No recent search</string>
+    <string name="text_your_search_history_will_appear_here">Your search history will appear here</string>
+
+
+    <string name="text_no_favorites">No favorites</string>
+    <string name="text_your_favorite_recipes_will_appear_here">Your favorite recipes will appear here</string>
+
+
+    <string name="text_hint_enter_ingredient">Enter ingredient (e.g. Tomato)</string>
+    <string name="text_whats_in_your_pantry">What\'s in your pantry?</string>
+    <string name="text_cooking_area">Cooking Area</string>
+    <string name="text_recents">Recents</string>
+    <string name="text_favorites">Favorites</string>
+    <string name="text_enter_ingredient_e_g_tomato">Enter ingredient (e.g. Tomato)</string>
+    <string name="text_pantry">Pantry</string>
+
+</resources>
