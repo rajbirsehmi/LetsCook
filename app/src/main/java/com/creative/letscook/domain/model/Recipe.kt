@@ -10,6 +10,7 @@ data class Recipe(
     val prepTime: Int,
     val cookTime: Int,
     val difficulty: String,
+    val countryName: String? = null,
     val ingredients: List<Ingredient>,
     val instructions: List<String>,
     val favorite: Boolean = false,

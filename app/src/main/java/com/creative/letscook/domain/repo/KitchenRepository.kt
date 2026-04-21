@@ -2,6 +2,8 @@ package com.creative.letscook.domain.repo
 
 import com.creative.letscook.data.local.FoodItemEntity
 import com.creative.letscook.data.local.RecipeResponse
+import com.creative.letscook.domain.enums.Countries
+import com.creative.letscook.domain.enums.DietaryType
 import com.creative.letscook.domain.model.FoodItem
 import com.creative.letscook.domain.model.Recipe
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +27,10 @@ interface KitchenRepository {
     fun getFoodItemByName(name: String): Flow<List<FoodItem>>
 
     // Groq Specific
-    suspend fun generateRecipesFromIngredients(ingredients: List<String>): RecipeResponse?
+    suspend fun generateRecipesFromIngredients(
+        ingredients: List<String>,
+        countries: List<Countries> = emptyList(),
+        dietaryType: DietaryType? = null
+    ): RecipeResponse?
 }
 
