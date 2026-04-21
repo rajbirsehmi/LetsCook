@@ -52,7 +52,7 @@ fun RecentAndFavoriteScreen(
             testTagIcon = if (isFavorite) testTagIconFavorites else testTagIconHistory,
             testTagText = if (isFavorite) testTagTextNoFavorites else testTagTextNoRecentSearch,
             testTagTextHint = if (isFavorite) testTagTextFavoritesHint else testTagTextRecentSearchHint,
-            contentDiscription = if (isFavorite) "No Favorites" else "No Recents"
+            contentDescription = if (isFavorite) "No Favorites" else "No Recents"
         )
     } else {
         LazyColumn(

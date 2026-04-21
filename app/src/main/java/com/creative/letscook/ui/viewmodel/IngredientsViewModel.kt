@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.creative.letscook.domain.enums.Countries
+import com.creative.letscook.domain.enums.DietaryType
 import com.creative.letscook.domain.model.FoodItem
 import com.creative.letscook.domain.model.Recipe
 import com.creative.letscook.domain.repo.KitchenRepository
@@ -35,11 +37,31 @@ class IngredientsViewModel @Inject constructor(
 
     var selectedOptions = mutableStateListOf<String>()
 
+    var selectedCountries = mutableStateListOf<Countries>()
+
+    var selectedDietaryType by mutableStateOf<DietaryType?>(null)
+
+    fun onDietaryTypeSelected(dietaryType: DietaryType) {
+        selectedDietaryType = if (selectedDietaryType == dietaryType) null else dietaryType
+    }
+
+    fun toggleCountrySelection(country: Countries) {
+        if (selectedCountries.contains(country)) {
+            selectedCountries.remove(country)
+        } else {
+            selectedCountries.add(country)
+        }
+    }
+
     fun generateRecipe() {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                val response = repository.generateRecipesFromIngredients(selectedOptions)
+                val response = repository.generateRecipesFromIngredients(
+                    ingredients = selectedOptions,
+                    countries = selectedCountries,
+                    dietaryType = selectedDietaryType
+                )
                 if (response != null && response.recipes.isNotEmpty()) {
                     _recipes.value = response.recipes
                 }
@@ -48,6 +70,8 @@ class IngredientsViewModel @Inject constructor(
             } finally {
                 _isLoading.value = false
                 selectedOptions.clear()
+                selectedCountries.clear()
+                selectedDietaryType = null
             }
         }
     }

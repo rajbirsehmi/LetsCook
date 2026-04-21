@@ -1,16 +1,22 @@
 package com.creative.letscook.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Group
@@ -22,19 +28,23 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.creative.letscook.domain.model.Ingredient
 import com.creative.letscook.domain.model.Recipe
 import com.creative.letscook.ui.components.TopAppBarRecipeScreen
 import com.creative.letscook.ui.viewmodel.FullRecipeViewModel
@@ -50,6 +60,10 @@ fun FullRecipeScreen(
         FullRecipeContent(
             recipe = it,
             onFavoriteClick = { viewModel.toggleFavorite(it) },
+            onDeleteClick = {
+                viewModel.deleteRecipe(it)
+                onNavigationBack()
+            },
             onNavigationBack = onNavigationBack
         )
     }
@@ -60,6 +74,7 @@ fun FullRecipeScreen(
 fun FullRecipeContent(
     recipe: Recipe,
     onFavoriteClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     onNavigationBack: () -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -71,6 +86,7 @@ fun FullRecipeContent(
                 isFavorite = recipe.favorite,
                 scrollBehavior = scrollBehavior,
                 onFavoriteClick = onFavoriteClick,
+                onDeleteClick = onDeleteClick,
                 onNavigationBack = onNavigationBack
             )
         }
@@ -79,135 +95,257 @@ fun FullRecipeContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(bottom = 32.dp)
         ) {
-            // 1. Overview Section (Time, Difficulty, Servings)
+            // 1. Overview Section
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RecipeInfoItem(
-                            Icons.Default.AccessTime,
-                            "${recipe.prepTime + recipe.cookTime} min"
+                    recipe.countryName?.let { country ->
+                        Text(
+                            text = country.uppercase(),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        RecipeInfoItem(Icons.Default.Restaurant, recipe.difficulty)
-                        RecipeInfoItem(Icons.Default.Group, "${recipe.servings} ser.")
+                    }
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RecipeInfoItem(
+                                Icons.Default.AccessTime,
+                                "${recipe.prepTime + recipe.cookTime} min",
+                                "Time"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(1.dp, 40.dp)
+                                    .background(MaterialTheme.colorScheme.outlineVariant)
+                            )
+                            RecipeInfoItem(
+                                Icons.Default.Restaurant,
+                                recipe.difficulty,
+                                "Difficulty"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(1.dp, 40.dp)
+                                    .background(MaterialTheme.colorScheme.outlineVariant)
+                            )
+                            RecipeInfoItem(
+                                Icons.Default.Group,
+                                "${recipe.servings}",
+                                "Servings"
+                            )
+                        }
                     }
                 }
             }
 
             // 2. Ingredients Section
             item {
-                Text(
-                    text = "Ingredients",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                SectionHeader("Ingredients", "${recipe.ingredients.size} items")
             }
 
             itemsIndexed(recipe.ingredients) { index, ingredient ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "•",
-                        modifier = Modifier.width(24.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Text(
-                        text = ingredient.name,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = ingredient.amount,
-                        style = MaterialTheme.typography.bodyLarge
+                IngredientItem(ingredient)
+                if (index < recipe.ingredients.size - 1) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
                 }
             }
 
             // 3. Instructions Section
             item {
-                Text(
-                    text = "Instructions",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionHeader("Instructions", "${recipe.instructions.size} steps")
             }
 
             itemsIndexed(recipe.instructions) { index, instruction ->
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Step ${index + 1}",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = instruction.toString(), // Assumes instruction has a meaningful toString()
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-                    )
-                    if (index < recipe.instructions.size - 1) {
-                        HorizontalDivider(
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
+                InstructionStepItem(index + 1, instruction)
             }
         }
     }
 }
 
 @Composable
-fun RecipeInfoItem(icon: ImageVector, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(text = label, style = MaterialTheme.typography.labelMedium)
+private fun SectionHeader(title: String, subtitle: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
-fun FullRecipeScreenPreview() {
-    FullRecipeContent(
-        recipe = recipe,
-        onFavoriteClick = {},
-        onNavigationBack = {}
-    )
+private fun IngredientItem(ingredient: Ingredient) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            modifier = Modifier.size(8.dp),
+            color = MaterialTheme.colorScheme.primary,
+            shape = CircleShape
+        ) {}
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = ingredient.name,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = ingredient.amount,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
 }
 
-val recipe = Recipe(
+@Composable
+private fun InstructionStepItem(stepNumber: Int, instruction: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stepNumber.toString(),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Step $stepNumber",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = instruction,
+                style = MaterialTheme.typography.bodyLarge,
+                lineHeight = 24.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun RecipeInfoItem(icon: ImageVector, value: String, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+private val previewIngredients = listOf(
+    Ingredient("Tomato", "4"),
+    Ingredient("Pasta", "200g"),
+    Ingredient("Olive Oil", "2 tbsp"),
+    Ingredient("Garlic", "3 cloves")
+)
+
+private val previewInstructions = listOf(
+    "Boil water in a large pot and add salt.",
+    "Cook the pasta according to package instructions until al dente.",
+    "Meanwhile, sauté minced garlic in olive oil until fragrant.",
+    "Add chopped tomatoes and cook until they soften.",
+    "Toss the pasta with the tomato sauce and serve hot."
+)
+
+private val previewRecipe = Recipe(
     id = 0,
-    name = "Recipe 1",
+    name = "Classic Tomato Pasta",
     servings = 2,
-    prepTime = 30,
-    cookTime = 60,
+    prepTime = 10,
+    cookTime = 15,
     difficulty = "Easy",
-    ingredients = ingredients,
-    instructions = instructions,
+    countryName = "Italy",
+    ingredients = previewIngredients,
+    instructions = previewInstructions,
     favorite = false
 )
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+@Preview(showBackground = true)
+fun FullRecipeScreenPreview() {
+    MaterialTheme {
+        FullRecipeContent(
+            recipe = previewRecipe,
+            onFavoriteClick = {},
+            onDeleteClick = {},
+            onNavigationBack = {}
+        )
+    }
+}

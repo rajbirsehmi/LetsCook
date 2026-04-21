@@ -40,4 +40,10 @@ class FullRecipeViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteRecipe(recipe: Recipe) {
+        viewModelScope.launch {
+            repository.deleteRecipe(recipe)
+        }
+    }
 }

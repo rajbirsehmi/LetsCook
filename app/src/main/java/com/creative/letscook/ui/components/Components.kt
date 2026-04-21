@@ -1,62 +1,70 @@
 package com.creative.letscook.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Kitchen
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.RestaurantMenu
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.AssistChip
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -67,8 +75,6 @@ import com.creative.letscook.domain.model.Ingredient
 import com.creative.letscook.domain.model.Recipe
 import com.creative.letscook.util.testTagTopAppBar
 
-// All TopAppBarHome Here
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBarHome() {
@@ -76,16 +82,25 @@ fun TopAppBarHome() {
         modifier = Modifier.testTag(testTagTopAppBar),
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.RestaurantMenu,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.RestaurantMenu,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold
                 )
             }
         },
@@ -96,65 +111,46 @@ fun TopAppBarHome() {
     )
 }
 
-@Composable
-@Preview
-fun TopAppBarHomePreview() {
-    TopAppBarHome()
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBarPantryScreen(
     onClick: () -> Unit
 ) {
     CenterAlignedTopAppBar(
-        modifier = Modifier.testTag(""),
         title = {
-            Text(stringResource(R.string.text_whats_in_your_pantry))
+            Text(
+                stringResource(R.string.text_whats_in_your_pantry),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
         },
         navigationIcon = {
-            IconButton(
-                onClick = onClick
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back"
-                )
+            IconButton(onClick = onClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         }
     )
 }
 
-@Composable
-@Preview
-fun TopAppBarPantryScreenPreview() {
-    TopAppBarPantryScreen(
-        {}
-    )
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBarRecipeListScreen() {
+fun TopAppBarRecipeListScreen(
+    onBackClick: () -> Unit = {}
+) {
     CenterAlignedTopAppBar(
         title = {
             Text(
-                text = "Chef's Recipes",
+                text = "Recipes for You",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
         },
         navigationIcon = {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-            )
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
         }
     )
-}
-
-@Composable
-@Preview
-fun TopAppBarRecipeListScreenPreview() {
-    TopAppBarRecipeListScreen()
 }
 
 @ExperimentalMaterial3Api
@@ -164,85 +160,75 @@ fun TopAppBarRecipeScreen(
     isFavorite: Boolean,
     scrollBehavior: TopAppBarScrollBehavior,
     onFavoriteClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     onNavigationBack: () -> Unit
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     LargeTopAppBar(
         title = {
             Text(
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
                 text = recipeName,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.ExtraBold
             )
         },
         navigationIcon = {
             IconButton(onClick = onNavigationBack) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back"
-                )
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         },
         actions = {
-            IconButton(
-                onClick = onFavoriteClick
-            ) {
+            IconButton(onClick = onFavoriteClick) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favorite"
+                    contentDescription = "Favorite",
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 )
+            }
+            Box {
+                IconButton(onClick = { showMenu = !showMenu }) {
+                    Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More")
+                }
+                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text("Delete Recipe") },
+                        onClick = {
+                            showMenu = false
+                            onDeleteClick()
+                        },
+                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                    )
+                }
             }
         },
         scrollBehavior = scrollBehavior
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-@Preview
-fun TopAppBarRecipeScreenPreview() {
-    TopAppBarRecipeScreen(
-        recipeName = "Pasta",
-        isFavorite = false,
-        scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
-        onFavoriteClick = {},
-        onNavigationBack = {}
-    )
-}
-
-
-
-// FloatingActionButton
-
 @Composable
 fun FloatingActionButtonCookingArea(
     onClick: () -> Unit = {},
 ) {
     ExtendedFloatingActionButton(
-        modifier = Modifier
-            .padding(16.dp),
+        modifier = Modifier.padding(16.dp),
         onClick = onClick,
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
-        elevation = FloatingActionButtonDefaults.elevation(8.dp),
-        icon = {
-            Icon(Icons.Default.RestaurantMenu, contentDescription = null)
-        },
+        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(20.dp),
+        icon = { Icon(Icons.Default.RestaurantMenu, contentDescription = null) },
         text = {
             Text(
                 text = "What's in my pantry?",
-                style = MaterialTheme.typography.labelLarge
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
             )
         }
     )
 }
-
-@Composable
-@Preview
-fun FloatingActionButtonCookingAreaPreview() {
-    FloatingActionButtonCookingArea()
-}
-
-// BottomNavigationBar
 
 @Composable
 fun RowScope.BottomNavBarItem(
@@ -270,12 +256,10 @@ fun RowScope.BottomNavBarItem(
             )
         },
         label = {
-            Text(text = type)
+            Text(text = type, fontWeight = FontWeight.Medium)
         }
     )
 }
-
-// Autocomplete
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -295,19 +279,25 @@ fun AutocompleteIngredientField(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(), // This links the menu to the text field
+                .menuAnchor(),
             value = textState,
             keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done, // Changes the 'Enter' key to a Search icon
+                imeAction = ImeAction.Done,
                 keyboardType = KeyboardType.Text
             ),
             onValueChange = {
                 onTextChange(it)
-                onExpandedChange(true) // Show suggestions as the user types
+                onExpandedChange(true)
             },
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedLabelColor = MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(16.dp),
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
         )
 
         if (filteredOptions.isNotEmpty()) {
@@ -318,9 +308,7 @@ fun AutocompleteIngredientField(
                 filteredOptions.forEach { selectionOption ->
                     DropdownMenuItem(
                         text = { Text(selectionOption.name) },
-                        onClick = {
-                            onOptionSelected(selectionOption)
-                        },
+                        onClick = { onOptionSelected(selectionOption) },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )
                 }
@@ -328,8 +316,6 @@ fun AutocompleteIngredientField(
         }
     }
 }
-
-// Recipe Templates
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -343,78 +329,99 @@ fun RecipeTemplate(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = MaterialTheme.shapes.large,
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        )
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(20.dp)
+                .fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = recipe.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    recipe.countryName?.let { country ->
+                        Text(
+                            text = country.uppercase(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            letterSpacing = 1.5.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                    Text(
+                        text = recipe.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 28.sp
+                    )
+                }
 
                 Surface(
                     color = when (recipe.difficulty.lowercase()) {
-                        "easy" -> MaterialTheme.colorScheme.primaryContainer
-                        "medium" -> MaterialTheme.colorScheme.secondaryContainer
-                        else -> MaterialTheme.colorScheme.tertiaryContainer
+                        "easy" -> MaterialTheme.colorScheme.secondaryContainer
+                        "medium" -> Color(0xFFFFF3E0)
+                        else -> Color(0xFFFFEBEE)
                     },
-                    shape = MaterialTheme.shapes.small
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         text = recipe.difficulty,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        fontWeight = FontWeight.Bold,
                         color = when (recipe.difficulty.lowercase()) {
-                            "easy" -> MaterialTheme.colorScheme.onPrimaryContainer
-                            "medium" -> MaterialTheme.colorScheme.onSecondaryContainer
-                            else -> MaterialTheme.colorScheme.onTertiaryContainer
+                            "easy" -> MaterialTheme.colorScheme.onSecondaryContainer
+                            "medium" -> Color(0xFFE65100)
+                            else -> Color(0xFFC62828)
                         }
                     )
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                RecipeInfoItem(
-                    icon = Icons.Default.AccessTime,
-                    label = "${recipe.prepTime + recipe.cookTime} min"
-                )
-                RecipeInfoItem(
-                    icon = Icons.Default.People,
-                    label = "${recipe.servings} servings"
-                )
-            }
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    RecipeInfoItemSmall(
+                        icon = Icons.Default.AccessTime,
+                        label = "${recipe.prepTime + recipe.cookTime} min"
+                    )
+                    RecipeInfoItemSmall(
+                        icon = Icons.Default.People,
+                        label = "${recipe.servings} servings"
+                    )
+                }
 
-            CompositionLocalProvider(LocalMinimumInteractiveComponentEnforcement provides false) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                    modifier = Modifier.size(32.dp)
                 ) {
-                    items(recipe.ingredients) { ingredient ->
-                        AssistChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    text = ingredient.name,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -424,18 +431,20 @@ fun RecipeTemplate(
 }
 
 @Composable
-private fun RecipeInfoItem(icon: ImageVector, label: String) {
+private fun RecipeInfoItemSmall(icon: ImageVector, label: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.primary
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium
         )
     }
 }
@@ -443,88 +452,24 @@ private fun RecipeInfoItem(icon: ImageVector, label: String) {
 @Composable
 @Preview(showBackground = true)
 fun RecipeTemplatePreview() {
-    Column {
-        recipes.forEach { item ->
-            RecipeTemplate(item)
+    LetsCookTheme {
+        Column {
+            recipes.forEach { item ->
+                RecipeTemplate(item)
+            }
         }
     }
 }
 
-
-val ingredients = listOf(
-    Ingredient(
-        name = "Tomato",
-        amount = "4"
-    ),
-    Ingredient(
-        name = "Peas",
-        amount = "100g"
-    ),
-    Ingredient(
-        name = "Cabbage",
-        amount = "100g"
-    ),
-    Ingredient(
-        name = "Chillies",
-        amount = "100g"
-    ),
-    Ingredient(
-        name = "Pasta",
-        amount = "100g"
-    ),
-    Ingredient(
-        name = "Wheat",
-        amount = "100g"
-    ),
-    Ingredient(
-        name = "Water",
-        amount = "100g"
-    )
+private val ingredients = listOf(Ingredient("Tomato", "4"))
+private val instructions = listOf("Step 1")
+private val recipes = listOf(
+    Recipe(0, "Pasta Surprise", 2, 15, 20, "Easy", "Italian", ingredients, instructions, false),
+    Recipe(1, "Spicy Tacos", 4, 20, 15, "Medium", "Mexican", ingredients, instructions, true)
 )
 
-val instructions = listOf(
-    "Step 1",
-    "Step 2",
-    "Step 3",
-    "Step 4",
-    "Step 5",
-    "Step 6",
-    "Step 7",
-    "Step 8",
-)
-
-val recipes = listOf(
-    Recipe(
-        name = "Recipe 1",
-        servings = 2,
-        prepTime = 30,
-        cookTime = 60,
-        difficulty = "Easy",
-        ingredients = ingredients,
-        instructions = instructions,
-        id = 0,
-        favorite = false
-    ),
-    Recipe(
-        name = "Recipe 2",
-        servings = 3,
-        prepTime = 40,
-        cookTime = 90,
-        difficulty = "Medium",
-        ingredients = ingredients,
-        instructions = instructions,
-        id = 1,
-        favorite = false
-    ),
-    Recipe(
-        name = "Recipe 3",
-        servings = 5,
-        prepTime = 20,
-        cookTime = 50,
-        difficulty = "Hard",
-        ingredients = ingredients,
-        instructions = instructions,
-        id = 2,
-        favorite = false
-    )
-)
+@Composable
+fun LetsCookTheme(content: @Composable () -> Unit) {
+    // Helper for preview
+    MaterialTheme(content = content)
+}

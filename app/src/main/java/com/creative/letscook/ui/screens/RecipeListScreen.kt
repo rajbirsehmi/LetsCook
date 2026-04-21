@@ -33,7 +33,9 @@ fun RecipeListScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBarRecipeListScreen()
+            TopAppBarRecipeListScreen(
+                onBackClick = { navController.popBackStack() }
+            )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
