@@ -8,6 +8,8 @@ import com.creative.letscook.data.local.RecipeResponseEntity
 import com.creative.letscook.data.remote.GroqApiService
 import com.creative.letscook.data.remote.GroqMessage
 import com.creative.letscook.data.remote.GroqRequest
+import com.creative.letscook.domain.enums.Countries
+import com.creative.letscook.domain.enums.DietaryType
 import com.creative.letscook.domain.model.FoodItem
 import com.creative.letscook.domain.model.Recipe
 import com.creative.letscook.domain.repo.KitchenRepository
@@ -76,12 +78,16 @@ class KitchenRepositoryImpl @Inject constructor(
             list.map { it.toDomain() }
         }
 
-    override suspend fun generateRecipesFromIngredients(ingredients: List<String>): RecipeResponse? {
+    override suspend fun generateRecipesFromIngredients(
+        ingredients: List<String>,
+        countries: List<Countries>,
+        dietaryType: DietaryType?
+    ): RecipeResponse? {
         val apiKey = "Bearer ${BuildConfig.GROQ_API_KEY}"
 
         val systemPrompt = """
             Role: You are a professional chef and data analyst.
-            Task: Generate a list of recipes based on the provided ingredients.
+            Task: Generate a list of 5+ recipes based on the provided ingredients.
             Rule: List all the supporting ingredients with their units. Also add other ingredients or seasoning if needed
             Rule: Be detailed with the instructions. You can create as manny instructions as needed.
             Output Format: Your response must be valid JSON only. Do not include any introductory text, markdown code blocks (like ```json), or concluding remarks.
@@ -94,6 +100,7 @@ class KitchenRepositoryImpl @Inject constructor(
             prep_time: (Integer, representing minutes)
             cook_time: (Integer, representing minutes)
             difficulty: (String: "Easy", "Medium", or "Hard")
+            country_name: (String, the cuisine type of the recipe)
             ingredients: An array of objects with keys "name" (String) and "amount" (String).
             instructions: An array of strings, where each string represents a single step.
             
@@ -106,6 +113,7 @@ class KitchenRepositoryImpl @Inject constructor(
             "prep_time": 15,
             "cook_time": 20,
             "difficulty": "Easy",
+            "country_name": "Country",
             "ingredients": [
             { "name": "Item", "amount": "Quantity" }
             ],
@@ -117,7 +125,14 @@ class KitchenRepositoryImpl @Inject constructor(
             ]
             }
         """.trimIndent()
-        val userPrompt = "Available ingredients: ${ingredients.joinToString(",")}"
+
+        val countryPrompt = if (countries.isNotEmpty()) {
+            " Preferred cuisines: ${countries.joinToString(", ") { it.displayName }}."
+        } else ""
+
+        val dietaryPrompt = dietaryType?.let { " Dietary restriction: ${it.displayName}." } ?: ""
+
+        val userPrompt = "Available ingredients: ${ingredients.joinToString(",")}.$countryPrompt$dietaryPrompt"
         val request = GroqRequest(
             messages = listOf(
                 GroqMessage("system", systemPrompt),
@@ -131,53 +146,6 @@ class KitchenRepositoryImpl @Inject constructor(
             val response = groqApiService.getCompletion(apiKey, request)
             val jsonContent = response.choices.firstOrNull()?.message?.content
                 ?: return null
-
-//            val jsonContent = "{\n" +
-//                    "  \"recipes\" : [ {\n" +
-//                    "    \"recipe_name\" : \"Paneer Matar Masala\",\n" +
-//                    "    \"servings\" : 4,\n" +
-//                    "    \"prep_time\" : 30,\n" +
-//                    "    \"cook_time\" : 25,\n" +
-//                    "    \"difficulty\" : \"Medium\",\n" +
-//                    "    \"ingredients\" : [ {\n" +
-//                    "      \"name\" : \"Paneer\",\n" +
-//                    "      \"amount\" : \"250 grams\"\n" +
-//                    "    }, {\n" +
-//                    "      \"name\" : \"Matar\",\n" +
-//                    "      \"amount\" : \"1 cup\"\n" +
-//                    "    } ],\n" +
-//                    "    \"instructions\" : [ \"Heat oil in a pan and sauté onions, ginger, and garlic.\", \"Add the Matar and cook until it's tender. Then add tomatoes and cook for another 5 minutes.\", \"Add Paneer, mix well, and cook for 5 minutes. Season with salt and spices.\" ]\n" +
-//                    "  }, {\n" +
-//                    "    \"recipe_name\" : \"Aloo Matar Sabzi\",\n" +
-//                    "    \"servings\" : 4,\n" +
-//                    "    \"prep_time\" : 20,\n" +
-//                    "    \"cook_time\" : 20,\n" +
-//                    "    \"difficulty\" : \"Easy\",\n" +
-//                    "    \"ingredients\" : [ {\n" +
-//                    "      \"name\" : \"Aloo\",\n" +
-//                    "      \"amount\" : \"2 medium\"\n" +
-//                    "    }, {\n" +
-//                    "      \"name\" : \"Matar\",\n" +
-//                    "      \"amount\" : \"1 cup\"\n" +
-//                    "    } ],\n" +
-//                    "    \"instructions\" : [ \"Boil the Aloo until it's tender, then peel and chop.\", \"Heat oil in a pan and sauté onions, ginger, and garlic.\", \"Add the Matar and cook until it's tender. Then add Aloo and cook for another 5 minutes.\" ]\n" +
-//                    "  }, {\n" +
-//                    "    \"recipe_name\" : \"Paneer Aloo Tikka\",\n" +
-//                    "    \"servings\" : 4,\n" +
-//                    "    \"prep_time\" : 25,\n" +
-//                    "    \"cook_time\" : 20,\n" +
-//                    "    \"difficulty\" : \"Medium\",\n" +
-//                    "    \"ingredients\" : [ {\n" +
-//                    "      \"name\" : \"Paneer\",\n" +
-//                    "      \"amount\" : \"250 grams\"\n" +
-//                    "    }, {\n" +
-//                    "      \"name\" : \"Aloo\",\n" +
-//                    "      \"amount\" : \"2 medium\"\n" +
-//                    "    } ],\n" +
-//                    "    \"instructions\" : [ \"Marinate Paneer and Aloo in spices and yogurt for 30 minutes.\", \"Grill or bake the marinated Paneer and Aloo until it's cooked through.\", \"Serve with a side of salad or raita.\" ]\n" +
-//                    "  } ]\n" +
-//                    "}"
-
             val recipeResponseEntity = json.decodeFromString<RecipeResponseEntity>(jsonContent)
             val recipeEntities = recipeResponseEntity.recipes
             val newIds = recipeDao.insertRecipes(recipeEntities)

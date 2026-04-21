@@ -26,6 +26,7 @@ data class RecipeEntity(
     @SerialName("prep_time") val prepTime: Int,
     @SerialName("cook_time") val cookTime: Int,
     @SerialName("difficulty") val difficulty: String,
+    @SerialName("country_name") val countryName: String? = null,
     @SerialName("ingredients") val ingredients: List<Ingredient>,
     @SerialName("instructions") val instructions: List<String>,
     val favorite: Boolean = false,
